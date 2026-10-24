@@ -1,7 +1,7 @@
 
 {
-  "name": "King Arthur Fitness",
-  "short_name": "King Arthur",
+  "name": "System Fitness",
+  "short_name": "System",
   "description": "Workout, nutrition and recovery tracker",
   "start_url": "./",
   "scope": "./",
