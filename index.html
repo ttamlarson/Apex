@@ -404,6 +404,11 @@ function timerText() {
          String(timer % 60).padStart(2, '0');
 }
 
+function setTimer(s) {
+  timer = s;
+  $('timer').textContent = timerText();
+}
+
 function startTimer() {
   enableTimerAudio();
 
@@ -422,12 +427,10 @@ function startTimer() {
       $('timer').textContent = timerText();
       toast('Rest complete');
 
-      // Best-effort vibration; iPhone Safari may not support it
       if (typeof navigator.vibrate === 'function') {
         navigator.vibrate([300, 150, 300, 150, 600]);
       }
 
-      // Play the timer sound
       playTimerAlert();
     }
   }, 1000);
