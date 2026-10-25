@@ -263,7 +263,7 @@ const id=()=>Math.random().toString(36).slice(2,10);
 const defaults=()=>({settings:{calories:2800,protein:130},workouts:[],foods:[],measurements:[],recoveries:[],current:{type:'Upper A',date:today(),duration:'',notes:'',exercises:[]}});
 let state;
 try{state={...defaults(),...JSON.parse(localStorage.getItem(KEY)||'{}')};const d=defaults();state.settings={...d.settings,...state.settings};for(const k of ['workouts','foods','measurements','recoveries'])if(!Array.isArray(state[k]))state[k]=[];state.current={...d.current,...state.current}}catch{state=defaults()}
-let timer=90,interval=null;
+let timer = 90, interval = null; let audioContext = null;  function enableTimerAudio() {   const AudioClass = window.AudioContext || window.webkitAudioContext;   if (!AudioClass) return;    if (!audioContext) audioContext = new AudioClass();    if (audioContext.state === 'suspended') {     audioContext.resume().catch(() => {});   } }  function playTimerAlert() {   if (!audioContext || audioContext.state !== 'running') return;    try {     const oscillator = audioContext.createOscillator();     const gain = audioContext.createGain();      oscillator.connect(gain);     gain.connect(audioContext.destination);      oscillator.frequency.value = 880;     gain.gain.value = 0.2;      oscillator.start();     oscillator.stop(audioContext.currentTime + 0.6);   } catch (e) {     console.log('Timer sound unavailable', e);   } }
 const plans = {
   // Original Upper / Lower programme
   'Upper A': [
@@ -410,6 +410,7 @@ function setTimer(s) {
 }
 
 function startTimer() {
+  enableTimerAudio();
   if (interval) clearInterval(interval);
 
   interval = setInterval(() => {
@@ -418,38 +419,20 @@ function startTimer() {
       $('timer').textContent = timerText();
     }
 
-    if (timer <= 0) {
-      clearInterval(interval);
-      interval = null;
-      toast('Rest complete');
+if (timer <= 0) {
+  clearInterval(interval);
+  interval = null;
+  timer = 0;
+  $('timer').textContent = timerText();
+  toast('Rest complete');
 
-      if ('vibrate' in navigator) {
-        navigator.vibrate([300, 150, 300, 150, 600]);
-      }
+  // Best-effort vibration (not supported reliably by iPhone Safari)
+  if (typeof navigator.vibrate === 'function') {
+    navigator.vibrate([300, 150, 300, 150, 600]);
+  }
 
-      try {
-        const AudioContextClass =
-          window.AudioContext || window.webkitAudioContext;
-
-        if (AudioContextClass) {
-          const ctx = new AudioContextClass();
-          const oscillator = ctx.createOscillator();
-          const gain = ctx.createGain();
-
-          oscillator.connect(gain);
-          gain.connect(ctx.destination);
-          oscillator.frequency.value = 880;
-          gain.gain.value = 0.15;
-
-          oscillator.onended = () => ctx.close();
-          oscillator.start();
-          oscillator.stop(ctx.currentTime + 0.35);
-        }
-      } catch (e) {
-        console.log('Audio alert unavailable');
-      }
-    }
-  }, 1000);
+  // Play the alert using the audio context enabled when Start was pressed
+  playTimerAlert();
 }
 
 document.querySelectorAll('[data-seconds]').forEach(b => {
