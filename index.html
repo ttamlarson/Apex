@@ -356,5 +356,16 @@ window.addEventListener('resize',()=>{if($('progress').classList.contains('activ
 init();setPlan(state.current.type||'Upper A');render();
 })();
 </script>
+ 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .catch(error =>
+        console.error('Apex offline setup failed:', error)
+      );
+  });
+}
+</script>
 </body>
 </html>
