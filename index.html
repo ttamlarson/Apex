@@ -108,6 +108,38 @@ footer{text-align:center;color:#707780;font-size:10px;letter-spacing:.12em;margi
   }
 }
 @media(max-width:380px){.setrow{grid-template-columns:24px 1fr 1fr 30px}.brand h1{font-size:16px}}
+ /* iPhone Safari: constrain the Training date field */
+#training .formgrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#training .formgrid .field:nth-child(2) {
+  min-width: 0;
+  width: 100%;
+}
+
+#training #wdate {
+  display: block;
+  width: 100%;
+  max-width: 150px;
+  min-width: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 10px 6px;
+  font-size: 14px;
+}
+
+/* Desktop: retain three columns */
+@media (min-width: 701px) {
+  #training .formgrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #training #wdate {
+    max-width: 170px;
+  }
+}
 </style>
 </head>
 <body>
