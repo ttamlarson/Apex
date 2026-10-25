@@ -404,13 +404,9 @@ function timerText() {
          String(timer % 60).padStart(2, '0');
 }
 
-function setTimer(s) {
-  timer = s;
-  $('timer').textContent = timerText();
-}
-
 function startTimer() {
   enableTimerAudio();
+
   if (interval) clearInterval(interval);
 
   interval = setInterval(() => {
@@ -419,20 +415,22 @@ function startTimer() {
       $('timer').textContent = timerText();
     }
 
-if (timer <= 0) {
-  clearInterval(interval);
-  interval = null;
-  timer = 0;
-  $('timer').textContent = timerText();
-  toast('Rest complete');
+    if (timer <= 0) {
+      clearInterval(interval);
+      interval = null;
+      timer = 0;
+      $('timer').textContent = timerText();
+      toast('Rest complete');
 
-  // Best-effort vibration (not supported reliably by iPhone Safari)
-  if (typeof navigator.vibrate === 'function') {
-    navigator.vibrate([300, 150, 300, 150, 600]);
-  }
+      // Best-effort vibration; iPhone Safari may not support it
+      if (typeof navigator.vibrate === 'function') {
+        navigator.vibrate([300, 150, 300, 150, 600]);
+      }
 
-  // Play the alert using the audio context enabled when Start was pressed
-  playTimerAlert();
+      // Play the timer sound
+      playTimerAlert();
+    }
+  }, 1000);
 }
 
 document.querySelectorAll('[data-seconds]').forEach(b => {
