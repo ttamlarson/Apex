@@ -132,7 +132,7 @@ footer{text-align:center;color:#707780;font-size:10px;letter-spacing:.12em;margi
 <section class="view" id="training">
  <div class="eyebrow">SESSION TRACKER</div><h2>Training</h2>
  <div class="card"><div class="formgrid">
-  <div class="field"><label>Workout</label><select id="wtype"><option>Upper A</option><option>Lower A</option><option>Upper B</option><option>Lower B</option><option>Custom</option></select></div>
+  <div class="field">   <label>Workout</label>   <select id="wtype">     <option>Upper A</option>     <option>Lower A</option>     <option>Upper B</option>     <option>Lower B</option>     <option>Push Day</option>     <option>Pull Day</option>     <option>Leg Day</option>     <option>Custom</option>   </select> </div>
   <div class="field"><label>Date</label><input id="wdate" type="date"></div>
   <div class="field"><label>Duration (min)</label><input id="duration" type="number" min="0" placeholder="60"></div>
  </div><div class="row" style="margin-top:12px"><button class="btn" id="loadplan">Load workout</button><button class="btn secondary" id="addex">+ Exercise</button></div></div>
@@ -300,6 +300,28 @@ function init(){const d=today();$('today').textContent=new Date().toLocaleDateSt
 function sync(){state.current.type=$('wtype').value;state.current.date=$('wdate').value;state.current.duration=$('duration').value;state.current.notes=$('wnotes').value}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='progress')drawChart([...state.measurements].sort((a,b)=>a.date.localeCompare(b.date)))});
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>document.querySelector(`[data-tab="${b.dataset.go}"]`).click());
+ function openWorkout(type) {
+  $('wtype').value = type;
+  sync();
+  setPlan(type);
+  document.querySelector('[data-tab="training"]').click();
+  toast(type + ' loaded');
+}
+
+document.querySelectorAll('[data-workout]').forEach(card => {
+  card.style.cursor = 'pointer';
+
+  card.addEventListener('click', () => {
+    openWorkout(card.dataset.workout);
+  });
+
+  card.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openWorkout(card.dataset.workout);
+    }
+  });
+});
 $('loadplan').onclick=()=>{sync();setPlan($('wtype').value);toast('Workout loaded')};
 $('addex').onclick=()=>{state.current.exercises.push(newEx('New exercise'));renderExercises()};
 $('exercises').oninput=e=>{const t=e.target;if(t.dataset.name){const x=state.current.exercises.find(a=>a.id===t.dataset.name);if(x)x.name=t.value}if(t.dataset.set){const x=state.current.exercises.find(a=>a.id===t.dataset.set),s=x?.sets[+t.dataset.i];if(s)s[t.dataset.key]=t.value}};
