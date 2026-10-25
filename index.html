@@ -399,20 +399,95 @@ $('export').onclick=()=>{const blob=new Blob([JSON.stringify({app:'Apex Protocol
 $('import').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const v=JSON.parse(await f.text());if(!Array.isArray(v.workouts)||!Array.isArray(v.foods)||!Array.isArray(v.measurements))throw Error();if(confirm('Replace current data with this backup?')){const d=defaults();state={...d,...v,settings:{...d.settings,...v.settings},current:{...d.current,...v.current}};init();setPlan(state.current.type);save();toast('Backup restored')}}catch{alert('Invalid Apex Protocol backup file')}e.target.value=''};
 $('erase').onclick=()=>{if(confirm('Delete all app records from this browser? Export a backup first if needed.')){state=defaults();localStorage.removeItem(KEY);init();setPlan('Upper A');save();toast('Data cleared')}};
 
+// ===== REST TIMER =====
+let timer = 90;
+let interval = null;
+let audioContext = null;
+
+// Enable audio when the user presses Start
+function enableTimerAudio() {
+  const AudioClass = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioClass) {
+    console.warn('Web Audio is not supported by this browser.');
+    return;
+  }
+
+  try {
+    if (!audioContext || audioContext.state === 'closed') {
+      audioContext = new AudioClass();
+    }
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(error => {
+        console.warn('Could not enable timer audio:', error);
+      });
+    }
+  } catch (error) {
+    console.error('Timer audio setup failed:', error);
+  }
+}
+
+// Play a two-tone alert when the rest timer finishes
+function playTimerAlert() {
+  if (!audioContext || audioContext.state !== 'running') {
+    console.warn('Timer audio is not running.');
+    return;
+  }
+
+  try {
+    const now = audioContext.currentTime;
+
+    [880, 1100, 880].forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const start = now + index * 0.25;
+      const end = start + 0.2;
+
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+      gain.gain.setValueAtTime(0.3, start + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, end);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+      oscillator.start(start);
+      oscillator.stop(end);
+    });
+  } catch (error) {
+    console.error('Timer alert failed:', error);
+  }
+}
+
+// Format remaining time as MM:SS
 function timerText() {
   return String(Math.floor(timer / 60)).padStart(2, '0') + ':' +
          String(timer % 60).padStart(2, '0');
 }
 
-function setTimer(s) {
-  timer = s;
+// Set the timer duration
+function setTimer(seconds) {
+  clearInterval(interval);
+  interval = null;
+
+  timer = Math.max(0, Number(seconds) || 0);
   $('timer').textContent = timerText();
 }
 
+// Start the countdown
 function startTimer() {
   enableTimerAudio();
 
   if (interval) clearInterval(interval);
+
+  if (timer <= 0) {
+    timer = 90;
+    $('timer').textContent = timerText();
+  }
 
   interval = setInterval(() => {
     if (timer > 0) {
@@ -425,37 +500,40 @@ function startTimer() {
       interval = null;
       timer = 0;
       $('timer').textContent = timerText();
+
       toast('Rest complete');
 
+      // Best-effort vibration; iPhone Safari may not support this
       if (typeof navigator.vibrate === 'function') {
         navigator.vibrate([300, 150, 300, 150, 600]);
       }
 
+      // Play the sound alert
       playTimerAlert();
     }
   }, 1000);
 }
 
-document.querySelectorAll('[data-seconds]').forEach(b => {
-  b.onclick = () => {
-    clearInterval(interval);
-    interval = null;
-    setTimer(+b.dataset.seconds);
+// Preset duration buttons
+document.querySelectorAll('[data-seconds]').forEach(button => {
+  button.onclick = () => {
+    setTimer(Number(button.dataset.seconds));
   };
 });
 
+// Start button
 $('starttimer').onclick = () => {
   if (!interval) startTimer();
 };
 
+// Pause button
 $('pausetimer').onclick = () => {
   clearInterval(interval);
   interval = null;
 };
 
+// Reset button
 $('resettimer').onclick = () => {
-  clearInterval(interval);
-  interval = null;
   setTimer(90);
 };
 
