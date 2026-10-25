@@ -182,11 +182,73 @@ const defaults=()=>({settings:{calories:2800,protein:130},workouts:[],foods:[],m
 let state;
 try{state={...defaults(),...JSON.parse(localStorage.getItem(KEY)||'{}')};const d=defaults();state.settings={...d.settings,...state.settings};for(const k of ['workouts','foods','measurements','recoveries'])if(!Array.isArray(state[k]))state[k]=[];state.current={...d.current,...state.current}}catch{state=defaults()}
 let timer=90,interval=null;
-const plans={
-'Upper A':[['Bench press',3,'6–10'],['Lat pulldown',3,'8–12'],['Incline dumbbell press',3,'8–12'],['Chest-supported row',3,'8–12'],['Lateral raise',3,'12–20'],['Triceps pushdown',2,'10–15'],['Dumbbell curl',2,'10–15']],
-'Lower A':[['Squat or leg press',3,'6–10'],['Romanian deadlift',3,'8–10'],['Leg extension',3,'10–15'],['Seated leg curl',3,'10–15'],['Calf raise',3,'10–15'],['Plank',3,'30–60 sec']],
-'Upper B':[['Incline bench press',3,'6–10'],['Seated cable row',3,'8–12'],['Machine chest press',3,'8–12'],['Neutral-grip pulldown',3,'8–12'],['Shoulder press',2,'8–12'],['Rear delt fly',3,'12–20'],['EZ-bar curl',2,'10–15'],['Overhead triceps extension',2,'10–15']],
-'Lower B':[['Deadlift or trap-bar deadlift',3,'5–8'],['Bulgarian split squat',3,'8–12'],['Lying leg curl',3,'10–15'],['Hip thrust',3,'8–12'],['Seated calf raise',3,'12–20'],['Hanging knee raise',3,'10–15']]
+const plans = {
+  // Original Upper / Lower programme
+  'Upper A': [
+    ['Bench Press', 3, '6–8'],
+    ['Barbell Row', 3, '8–10'],
+    ['Incline Dumbbell Press', 3, '8–10'],
+    ['Lat Pulldown', 3, '8–12'],
+    ['Lateral Raises', 3, '12–15'],
+    ['Tricep Pushdowns', 3, '10–12'],
+    ['Bicep Curls', 3, '10–12']
+  ],
+
+  'Lower A': [
+    ['Squat', 3, '6–8'],
+    ['Romanian Deadlift', 3, '8–10'],
+    ['Leg Press', 3, '10–12'],
+    ['Leg Curl', 3, '10–12'],
+    ['Calf Raises', 4, '12–15']
+  ],
+
+  'Upper B': [
+    ['Overhead Press', 3, '6–8'],
+    ['Pull-Ups / Lat Pulldown', 3, '8–12'],
+    ['Dumbbell Bench Press', 3, '8–10'],
+    ['Seated Cable Row', 3, '8–12'],
+    ['Lateral Raises', 3, '12–15'],
+    ['Skull Crushers', 3, '10–12'],
+    ['Hammer Curls', 3, '10–12']
+  ],
+
+  'Lower B': [
+    ['Deadlift', 3, '5'],
+    ['Hack Squat', 3, '8–10'],
+    ['Bulgarian Split Squat', 3, '8–10 per leg'],
+    ['Leg Extension', 3, '10–12'],
+    ['Hamstring Curl', 3, '10–12'],
+    ['Calf Raises', 4, '12–15']
+  ],
+
+  // Additional Push / Pull / Legs programme
+  'Push Day': [
+    ['Bench Press', 3, '6–8'],
+    ['Incline Dumbbell Press', 3, '6–8'],
+    ['Seated Shoulder Press', 3, '6–8'],
+    ['Cable Press', 3, '8–10'],
+    ['Tricep Pushdowns', 3, '6–8'],
+    ['Skull Crushers', 3, '6–8'],
+    ['Push-Ups', 3, 'Failure']
+  ],
+
+  'Pull Day': [
+    ['Seated Row', 3, '6–8'],
+    ['Shrugs', 3, '6–8'],
+    ['Lat Pulldowns', 3, '6–8'],
+    ['Bicep Curls', 3, '8–10'],
+    ['Deadlift', 3, '5'],
+    ['Landmine Rows', 3, '6–8']
+  ],
+
+  'Leg Day': [
+    ['Hack Squats', 3, '6–8'],
+    ['Romanian Deadlifts', 3, '5'],
+    ['Leg Press', 3, '6–8'],
+    ['Hamstring Curl (per leg)', 3, '5 per leg'],
+    ['Leg Extensions', 3, '6–8'],
+    ['Calf Raises', 4, '8–10']
+  ]
 };
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function n(v){return Number.isFinite(Number(v))?Number(v):0}
