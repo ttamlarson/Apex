@@ -465,13 +465,16 @@ init();setPlan(state.current.type||'Upper A');render();
  
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .catch(error =>
-        console.error('Apex offline setup failed:', error)
-      );
-  });
-}
+ window.addEventListener('resize', () => {
+  if ($('progress').classList.contains('active')) {
+    drawChart(state.measurements);
+  }
+});
+
+init();
+setPlan();
+render();
+})();
 </script>
 </body>
 </html>
